@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Navigation Problem Solver</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .solution-card {
+            display: none;
+        }
+        .map-container {
+            height: 500px;
+            margin: 20px 0;
+        }
+        .question-text {
+            white-space: pre-line;
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .result-value {
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .navbar {
+            margin-bottom: 30px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .btn-calculate {
+            margin-top: 15px;
+        }
+        .result-alert {
+            display: none;
+        }
+        .map-container {
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .step-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .step-title {
+            background-color: #0d6efd;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .coordinate-group {
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+        .coordinate-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0d6efd;
+        }
+        .result-container {
+            background-color: #e9f7ef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .map-container {
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .dms-input {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .progress-stepper {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .stepper-item {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .stepper-item:not(:last-child):after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background-color: #dee2e6;
+            top: 15px;
+            left: 50%;
+        }
+        .stepper-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 5px;
+            font-weight: bold;
+            color: white;
+        }
+        .active .stepper-circle {
+            background-color: #0d6efd;
+        }
+        .completed .stepper-circle {
+            background-color: #198754;
+        }
+        .btn-navigate {
+            margin-top: 20px;
+        }
+        /* New styles for calculation steps */
+        .calculation-steps {
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #0d6efd;
+        }
+        .step-number {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .calculation-step {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #dee2e6;
+        }
+        .calculation-step:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .formula {
+            font-family: 'Courier New', monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+        .result-value {
+            font-weight: bold;
+            color: #198754;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #e7f1ff;
+            color: #0c63e4;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Flight Navigation Problem Solver</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Flight Navigation Question</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end mb-3">
+                            <button class="btn btn-outline-primary" id="generateQuestion">Generate New Question</button>
+                        </div>
+                        <div class="question-text" id="questionText">Click "Generate New Question" to start.</div>
+                        
+                        <div class="loading" id="loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Calculating solution...</p>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button class="btn btn-primary btn-calculate" id="calculateSolution">Calculate Solution</button>
+                            <button class="btn btn-success" id="showSolution" style="display: none;">View Solution</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card solution-card" id="solutionCard">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Flight Navigation Solution</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success result-alert" id="resultAlert" role="alert">
+                            <h4 class="alert-heading">Critical Point (CP) Location:</h4>
+                            <p class="mb-0">The critical point is located <span id="cpDistanceResult" class="result-value">0</span> NM from the departure airport.</p>
+                        </div>
+                        
+                        <h5 class="card-title">Flight Details:</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th>Departure Airport:</th>
+                                            <td><span id="departureAirport"></span> (<span id="departureCode"></span>)</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Destination Airport:</th>
+                                            <td><span id="arrivalAirport"></span> (<span id="arrivalCode"></span>)</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Flight Level:</th>
+                                            <td>FL<span id="cruiseLevel"></span></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Normal TAS:</th>
+                                            <td><span id="tasNormal"></span> kt</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Single Engine TAS:</th>
+                                            <td><span id="tasSingleEngine"></span> kt</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th>Normal Wind Vector:</th>
+                                            <td><span id="windNormalDir"></span>M / <span id="windNormalSpeed"></span> kt</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Single Engine Wind Vector:</th>
+                                            <td><span id="windSingleDir"></span>M / <span id="windSingleSpeed"></span> kt</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total Distance:</th>
+                                            <td><span id="totalDistance"></span> NM</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Wind Correction:</th>
+                                            <td><span id="windCorrection"></span> NM</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Critical Point:</th>
+                                            <td><span id="criticalPoint"></span> NM</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <h5 class="card-title mt-4">Route Map:</h5>
+                        <div id="mapContainer" class="map-container"></div>
+                        <h5 class="card-title mt-4">Steps</h5>
+                        <div class="calculation-step">
+                            <h5><span class="step-number">1</span>Finding the Midpoint of Line C-D (P3-P4)</h5>
+                            <p>The geodesic intersection function calculates the midpoint between P3 and P4 (C and D points).</p>
+                        </div>
+                        <div class="calculation-step">
+                            <h5><span class="step-number">2</span>Creating Perpendicular Line from Midpoint</h5>
+                            <p>A perpendicular line is drawn from the midpoint of C-D by:</p>
+                            <div class="formula">
+                                1. Calculating bearing of C-D line<br>
+                                2. Adding 90° to get perpendicular bearing<br>
+                                3. Creating points 1000km in both directions
+                            </div>
+                        </div>
+                        <div class="calculation-step">
+                            <h5><span class="step-number">3</span>Finding Intersection with P1-P2 Line</h5>
+                            <p>The perpendicular line is extended until it intersects with the P1-P2 line, giving us the <span class="result-value">Initial Intersection Point</span>.</p>
+                            <div class="formula">
+                                Coordinates: black point
+                            </div>
+                        </div>
+                        <div class="calculation-step">
+                            <h5><span class="step-number">4</span>Calculating Distance to Point P3</h5>
+                            <p>The geodesic distance from the intersection point to P3 (C) is calculated:</p>
+                            <div class="formula" id="distanceToP3">
+                                Distance to P3: ... nautical miles
+                            </div>
+                        <div class="calculation-step">
+                                <h5><span class="step-number">4</span>Calculating Distance to Point P3</h5>
+                                <p>The  distance from the intersection point to P3 (C) is calculated:</p>
+                                <div class="formula" id="distanceToP4">
+                                    distance from intersection point A and point B to calculate distance : ... nautical miles
+                                </div>
+                        </div>
+                        <div class="calculation-step">
+                            <h5><span class="step-number">5</span>Calculating Distance critical to Point P1</h5>
+                            <p>The geodesic distance from the intersection point to P3 (C) is calculated:</p>
+                            <div class="formula" id="distanceToP5">
+                                distance from intersection point A and point B to calculate distance : ... nautical miles
+                            </div>
+                    </div>
+                     </div>  
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script>
+        // Current question data
+        let currentQuestion = null;
+        
+        // Airport data with coordinates
+        const airports = [
+            {"code": "HLT", "name": "Hamilton Airport", "lat": -37.6489, "long": 142.0643, "reference": "L1"},
+            {"code": "MGB", "name": "Mount Gambier Airport", "lat": -37.7456, "long": 140.785, "reference": "L1"},
+            {"code": "MEL", "name": "Melbourne Airport", "lat": -37.6733, "long": 144.8433, "reference": "L1"},
+            {"code": "MBW", "name": "Moorabbin Airport", "lat": -37.9758, "long": 145.102, "reference": "L1"},
+            {"code": "AVV", "name": "Avalon Airport", "lat": -38.0394, "long": 144.468, "reference": "L1"},
+            {"code": "KNS", "name": "King Island Airport", "lat": -39.8775, "long": 143.878, "reference": "L1"},
+            {"code": "SXE", "name": "East Sale Airport", "lat": -38.0931, "long": 147.149, "reference": "L1"},
+            {"code": "TGN", "name": "Latrobe Valley Airport", "lat": -38.2072, "long": 146.4706, "reference": "L1"},
+            {"code": "BWT", "name": "Wynyard Airport", "lat": -40.9989, "long": 145.731, "reference": "L1"},
+            {"code": "HBA", "name": "Hobart Airport", "lat": -42.8361, "long": 147.5106, "reference": "L1"},
+            {"code": "LST", "name": "Launceston Airport", "lat": -41.5453, "long": 147.214, "reference": "L1"},
+            
+            {"code": "WYA", "name": "Whyalla Airport", "lat": -33.0589, "long": 137.514, "reference": "L2"},
+            {"code": "YPED", "name": "RAAF Base Edinburgh", "lat": -34.7, "long": 138.62, "reference": "L2"},
+            {"code": "YPPF", "name": "Parafield Airport", "lat": -34.7893, "long": 138.6265, "reference": "L2"},
+            {"code": "ADL", "name": "Adelaide Airport", "lat": -34.945, "long": 138.531, "reference": "L2"},
+            {"code": "MQL", "name": "Mildura Airport", "lat": -34.2292, "long": 142.086, "reference": "L2"},
+            {"code": "SWH", "name": "Swan Hill Airport", "lat": -35.3758, "long": 143.533, "reference": "L2"},
+            {"code": "SHT", "name": "Shepparton Airport", "lat": -36.4289, "long": 145.393, "reference": "L2"},
+            {"code": "YMNG", "name": "Mangalore Airport", "lat": -36.8883, "long": 145.184, "reference": "L2"},
+            {"code": "MEL", "name": "Melbourne Airport", "lat": -37.6733, "long": 144.843, "reference": "L2"},
+            {"code": "SXE", "name": "East Sale Airport", "lat": -38.0989, "long": 147.149, "reference": "L2"},
+            {"code": "TGN", "name": "Latrobe Valley Airport", "lat": -38.2072, "long": 146.4706, "reference": "L2"},
+            {"code": "MBW", "name": "Moorabbin Airport", "lat": -37.9758, "long": 145.102, "reference": "L2"},
+            {"code": "WGA", "name": "Wagga Wagga Airport", "lat": -35.1592, "long": 147.459, "reference": "L2"},
+            {"code": "CWW", "name": "Corowa Airport", "lat": -35.9947, "long": 146.357, "reference": "L2"},
+            {"code": "ABX", "name": "Albury Airport", "lat": -36.0692, "long": 146.959, "reference": "L2"},
+            {"code": "PKE", "name": "Parkes Airport", "lat": -33.1314, "long": 148.239, "reference": "L2"},
+            {"code": "GFF", "name": "Griffith Airport", "lat": -34.2508, "long": 146.067, "reference": "L2"},
+            {"code": "CWT", "name": "Cowra Airport", "lat": -33.8447, "long": 148.649, "reference": "L2"},
+            {"code": "BHS", "name": "Bathurst Airport", "lat": -33.4094, "long": 149.652, "reference": "L2"},
+            {"code": "XRH", "name": "RAAF Base Richmond", "lat": -33.6006, "long": 150.781, "reference": "L2"},
+            {"code": "SYD", "name": "Sydney Kingsford Smith Airport", "lat": -33.9399, "long": 151.175, "reference": "L2"},
+            {"code": "GUL", "name": "Goulburn Airport", "lat": -34.8103, "long": 149.726, "reference": "L2"},
+            {"code": "WOL", "name": "Shellharbour Airport", "lat": -34.5611, "long": 150.789, "reference": "L2"},
+            {"code": "CBR", "name": "Canberra Airport", "lat": -35.3069, "long": 149.195, "reference": "L2"},
+            {"code": "NOA", "name": "HMAS Albatross (Nowra) Airport", "lat": -34.9489, "long": 150.537, "reference": "L2"},
+            {"code": "OOM", "name": "Cooma–Snowy Mountains Airport", "lat": -36.3006, "long": 148.973, "reference": "L2"},
+            {"code": "MIM", "name": "Merimbula Airport", "lat": -36.9086, "long": 149.901, "reference": "L2"},
+            {"code": "XMC", "name": "Mallacoota Airport", "lat": -37.5983, "long": 149.720, "reference": "L2"}
+        ];
+
+        // Function to calculate distance between two points in nautical miles
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 3440.065; // Earth radius in nautical miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Function to select airports that form meaningful geometric shapes
+        function selectAirportsForShape() {
+    let attempts = 0;
+    const maxAttempts = 100;
+    
+    const airportsL1 = airports.filter(a => a.reference === "L1");
+    const airportsL2 = airports.filter(a => a.reference === "L2");
+    
+    if (!airportsL1.length || !airportsL2.length) {
+        console.error("Not enough airports in both reference groups");
+        return null;
+    }
+    
+    while (attempts < maxAttempts) {
+        attempts++;
+        
+        const useL1 = Math.random() < 0.5;
+        const reference = useL1 ? "L1" : "L2";
+        const depGroup = useL1 ? airportsL1 : airportsL2;
+        const arrGroup = useL1 ? airportsL1 : airportsL2;
+        
+        const depIndex = Math.floor(Math.random() * depGroup.length);
+        let arrIndex;
+        do {
+            arrIndex = Math.floor(Math.random() * arrGroup.length);
+        } while (arrIndex === depIndex);
+        
+        const dep = depGroup[depIndex];
+        const arr = arrGroup[arrIndex];
+        
+        if (!dep || !arr) continue;
+        
+        const mainDistance = calculateDistance(dep.lat, dep.long, arr.lat, arr.long);
+        
+        if (mainDistance < 300) continue;
+        
+        let shapeType = Math.floor(Math.random() * 5); 
+        
+        if (shapeType === 0) {
+            // Triangle logic
+            const candidateGroup = Math.random() < 0.5 ? airportsL1 : airportsL2;
+            for (let i = 0; i < candidateGroup.length; i++) {
+                const candidate = candidateGroup[i];
+                if (candidate.code === dep.code || candidate.code === arr.code) continue;
+                
+                const side1 = calculateDistance(dep.lat, dep.long, candidate.lat, candidate.long);
+                const side2 = calculateDistance(arr.lat, arr.long, candidate.lat, candidate.long);
+                
+                // ENSURE side distances are not greater than main distance
+                if (side1 > mainDistance || side2 > mainDistance) continue;
+                
+                const s = (mainDistance + side1 + side2) / 2;
+                const area = Math.sqrt(s * (s - mainDistance) * (s - side1) * (s - side2));
+                
+                const angle1 = calculateAngle(side2, side1, mainDistance);
+                const angle2 = calculateAngle(mainDistance, side2, side1);
+                const angle3 = calculateAngle(mainDistance, side1, side2);
+                
+                if (area > 10000 && side1 > 150 && side2 > 150) {
+                    const hasRightAngle = [angle1, angle2, angle3].some(a => Math.abs(a - 90) < 5);
+                    const hasStraightAngle = [angle1, angle2, angle3].some(a => a < 10 || a > 170);
+                    
+                    if (hasRightAngle || hasStraightAngle) continue;
+                    
+                    const triangleType = determineTriangleType(mainDistance, side1, side2);
+                    
+                    if (triangleType === "Right Triangle" || triangleType === "Degenerate Triangle") {
+                        continue;
+                    }
+                    
+                    return {
+                        dep: dep,
+                        arr: arr,
+                        eland: candidate,
+                        eland2: arr,
+                        shapeType: "triangle",
+                        triangleType: triangleType,
+                        reference: reference
+                    };
+                }
+            }
+        } else if (shapeType === 4) {
+            // Transversal logic
+            const transversalGroup = depGroup === airportsL1 ? airportsL2 : airportsL1;
+            const parallelGroup = transversalGroup === airportsL1 ? airportsL2 : airportsL1;
+            
+            for (let i = 0; i < transversalGroup.length; i++) {
+                const transversalPoint = transversalGroup[i];
+                if (transversalPoint.code === dep.code || transversalPoint.code === arr.code) continue;
+                
+                for (let j = 0; j < parallelGroup.length; j++) {
+                    const parallelPoint = parallelGroup[j];
+                    if (parallelPoint.code === dep.code || parallelPoint.code === arr.code) continue;
+                    
+                    // Calculate distance between transversal points
+                    const transversalDistance = calculateDistance(
+                        transversalPoint.lat, transversalPoint.long,
+                        parallelPoint.lat, parallelPoint.long
+                    );
+                    
+                    // ENSURE transversal distance is not greater than main distance
+                    if (transversalDistance > mainDistance) continue;
+                    
+                    if (isValidTransversal(dep, arr, transversalPoint, parallelPoint)) {
+                        const angle1 = calculateAngleBetweenLines(dep, arr, transversalPoint, parallelPoint);
+                        if (Math.abs(angle1 - 90) < 5) continue;
+                        
+                        return {
+                            dep: dep,
+                            arr: arr,
+                            eland: transversalPoint,
+                            eland2: parallelPoint,
+                            shapeType: "transversal",
+                            reference: reference
+                        };
+                    }
+                }
+            }
+        } else {
+            // Other shapes logic
+            const group1 = depGroup === airportsL1 ? airportsL2 : airportsL1;
+            const group2 = group1 === airportsL1 ? airportsL2 : airportsL1;
+            
+            for (let i = 0; i < group1.length; i++) {
+                const eland = group1[i];
+                if (eland.code === dep.code || eland.code === arr.code) continue;
+                
+                for (let j = 0; j < group2.length; j++) {
+                    const eland2 = group2[j];
+                    if (eland2.code === dep.code || eland2.code === arr.code) continue;
+                    
+                    const sideDistance1 = calculateDistance(dep.lat, dep.long, eland.lat, eland.long);
+                    const sideDistance2 = calculateDistance(arr.lat, arr.long, eland2.lat, eland2.long);
+                    const crossDistance = calculateDistance(eland.lat, eland.long, eland2.lat, eland2.long);
+                    
+                    // ENSURE cross distance is not greater than main distance
+                    if (crossDistance > mainDistance) continue;
+                    
+                    let isValidShape = false;
+                    
+                    if (shapeType === 1) {
+                        isValidShape = isValidRectangle(sideDistance1, sideDistance2, crossDistance, dep, arr, eland, eland2);
+                    } else if (shapeType === 2) {
+                        isValidShape = isValidTrapezoid(dep, arr, eland, eland2);
+                    } else {
+                        isValidShape = isValidParallelogram(dep, arr, sideDistance1, sideDistance2, crossDistance, eland, eland2);
+                    }
+                    
+                    if (isValidShape) {
+                        const angle1 = calculateAngleBetweenLines(dep, arr, dep, eland);
+                        const angle2 = calculateAngleBetweenLines(arr, dep, arr, eland2);
+                        
+                        if (Math.abs(angle1 - 90) < 5 || Math.abs(angle2 - 90) < 5) {
+                            continue;
+                        }
+                        
+                        if (crossDistance > mainDistance * 0.3 && crossDistance < mainDistance * 0.8) {
+                            return {
+                                dep: dep,
+                                arr: arr,
+                                eland: eland,
+                                eland2: eland2,
+                                shapeType: ["", "rectangle", "trapezoid", "parallelogram"][shapeType],
+                                reference: reference
+                            };
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Fallback logic
+    console.warn("Could not find ideal shape after " + maxAttempts + " attempts, using fallback");
+    
+    const fallbackAirports = findWellSeparatedAirports(airportsL1, airportsL2);
+    
+    if (fallbackAirports.length >= 3) {
+        const side1 = calculateDistance(fallbackAirports[0].lat, fallbackAirports[0].long, 
+                                      fallbackAirports[1].lat, fallbackAirports[1].long);
+        const side2 = calculateDistance(fallbackAirports[1].lat, fallbackAirports[1].long, 
+                                      fallbackAirports[2].lat, fallbackAirports[2].long);
+        const side3 = calculateDistance(fallbackAirports[2].lat, fallbackAirports[2].long, 
+                                      fallbackAirports[0].lat, fallbackAirports[0].long);
+        
+        // ENSURE no side is longer than the main distance (side1)
+        // In the fallback section, replace the problematic part with this:
+
+if (fallbackAirports.length >= 3) {
+    const side1 = calculateDistance(fallbackAirports[0].lat, fallbackAirports[0].long, 
+                                  fallbackAirports[1].lat, fallbackAirports[1].long);
+    const side2 = calculateDistance(fallbackAirports[1].lat, fallbackAirports[1].long, 
+                                  fallbackAirports[2].lat, fallbackAirports[2].long);
+    const side3 = calculateDistance(fallbackAirports[2].lat, fallbackAirports[2].long, 
+                                  fallbackAirports[0].lat, fallbackAirports[0].long);
+    
+    // Check if any side is longer than the main distance (side1)
+    if (side2 <= side1 && side3 <= side1) {
+        const triangleType = determineTriangleType(side1, side2, side3);
+        const angle1 = calculateAngle(side2, side3, side1);
+        const angle2 = calculateAngle(side1, side3, side2);
+        const angle3 = calculateAngle(side1, side2, side3);
+        
+        const hasRightAngle = [angle1, angle2, angle3].some(a => Math.abs(a - 90) < 5);
+        const hasStraightAngle = [angle1, angle2, angle3].some(a => a < 10 || a > 170);
+        
+        if (!hasRightAngle && !hasStraightAngle && 
+            triangleType !== "Right Triangle" && 
+            triangleType !== "Degenerate Triangle") {
+            
+            return {
+                dep: fallbackAirports[0],
+                arr: fallbackAirports[1],
+                eland: fallbackAirports[2],
+                eland2: fallbackAirports[1],
+                shapeType: "triangle",
+                triangleType: triangleType,
+                reference: fallbackAirports[0].reference
+            };
+        }
+    }
+    // If the condition isn't met, just continue to the error message below
+}
+        
+        const triangleType = determineTriangleType(side1, side2, side3);
+        const angle1 = calculateAngle(side2, side3, side1);
+        const angle2 = calculateAngle(side1, side3, side2);
+        const angle3 = calculateAngle(side1, side2, side3);
+        
+        const hasRightAngle = [angle1, angle2, angle3].some(a => Math.abs(a - 90) < 5);
+        const hasStraightAngle = [angle1, angle2, angle3].some(a => a < 10 || a > 170);
+        
+        if (!hasRightAngle && !hasStraightAngle && 
+            triangleType !== "Right Triangle" && 
+            triangleType !== "Degenerate Triangle") {
+            
+            return {
+                dep: fallbackAirports[0],
+                arr: fallbackAirports[1],
+                eland: fallbackAirports[2],
+                eland2: fallbackAirports[1],
+                shapeType: "triangle",
+                triangleType: triangleType,
+                reference: fallbackAirports[0].reference
+            };
+        }
+    }
+    
+    console.error("Could not find valid airports for any shape");
+    return null;
+}
+// Helper function to calculate angle between three points (in degrees)
+function calculateAngle(a, b, c) {
+    // Law of cosines: angle opposite to side 'a'
+    return Math.acos((b*b + c*c - a*a) / (2*b*c)) * (180 / Math.PI);
+}
+
+// Helper function to calculate angle between two lines
+function calculateAngleBetweenLines(p1, p2, p3, p4) {
+    // Calculate vectors for both lines
+    const vec1 = { x: p2.long - p1.long, y: p2.lat - p1.lat };
+    const vec2 = { x: p4.long - p3.long, y: p4.lat - p3.lat };
+    
+    // Calculate dot product and magnitudes
+    const dotProduct = vec1.x * vec2.x + vec1.y * vec2.y;
+    const mag1 = Math.sqrt(vec1.x * vec1.x + vec1.y * vec1.y);
+    const mag2 = Math.sqrt(vec2.x * vec2.x + vec2.y * vec2.y);
+    
+    // Calculate angle in degrees
+    return Math.acos(dotProduct / (mag1 * mag2)) * (180 / Math.PI);
+}
+        // Helper functions for shape validation
+        function calculateTriangleArea(a, b, c) {
+            const s = (a + b + c) / 2;
+            return Math.sqrt(s * (s - a) * (s - b) * (s - c));
+        }
+
+        function isValidRectangle(side1, side2, cross, dep, arr, candidate1, candidate2) {
+            const diag1 = calculateDistance(dep.lat, dep.long, candidate2.lat, candidate2.long);
+            const diag2 = calculateDistance(arr.lat, arr.long, candidate1.lat, candidate1.long);
+            const ratio1 = Math.min(side1, cross) / Math.max(side1, cross);
+            const ratio2 = Math.min(side2, cross) / Math.max(side2, cross);
+            return Math.abs(diag1 - diag2) < 50 && ratio1 > 0.8 && ratio2 > 0.8;
+        }
+
+        function isValidTrapezoid(dep, arr, candidate1, candidate2) {
+            const angle1 = calculateAngle(dep, arr, candidate1);
+            const angle2 = calculateAngle(arr, dep, candidate2);
+            return Math.abs(angle1 - angle2) < 15;
+        }
+
+        function isValidParallelogram(dep, arr, side1, side2, cross, candidate1, candidate2) {
+            const diag1 = calculateDistance(dep.lat, dep.long, candidate2.lat, candidate2.long);
+            const diag2 = calculateDistance(arr.lat, arr.long, candidate1.lat, candidate1.long);
+            return Math.abs(side1 - side2) < 50 && Math.abs(cross - side1) < 50 && Math.abs(diag1 - diag2) < 50;
+        }
+
+        // Helper function to calculate angle between three points
+        function calculateAngle(p1, p2, p3) {
+            const angle1 = Math.atan2(p2.long - p1.long, p2.lat - p1.lat);
+            const angle2 = Math.atan2(p3.long - p2.long, p3.lat - p2.lat);
+            let angle = (angle2 - angle1) * 180 / Math.PI;
+            return (angle + 360) % 360;
+        }
+
+        /**
+         * Determines the type of triangle based on side lengths
+         * @param {number} a - Length of first side
+         * @param {number} b - Length of second side
+         * @param {number} c - Length of third side
+         * @returns {string} - Type of triangle
+         */
+        function determineTriangleType(a, b, c) {
+            // First, check if it's a valid triangle (sum of any two sides > third side)
+            if (a + b <= c || a + c <= b || b + c <= a) {
+                return "Invalid Triangle";
+            }
+            
+            // Sort sides
+            [a, b, c] = [a, b, c].sort((x, y) => x - y);
+            
+            // Check for equilateral triangle (all sides equal)
+            const tolerance = 0.01; // 1% tolerance for floating point comparison
+            if (Math.abs(a - b) / a < tolerance && Math.abs(b - c) / b < tolerance) {
+                return "Equilateral Triangle";
+            }
+            
+            // Check for right triangle using Pythagorean theorem (a² + b² = c²)
+            // With tolerance for floating point imprecision
+            if (Math.abs(a*a + b*b - c*c) / (c*c) < tolerance) {
+                return "Right Triangle";
+            }
+            
+            // Check for obtuse triangle (a² + b² < c²)
+            if (a*a + b*b < c*c) {
+                return "Obtuse Triangle";
+            }
+            
+            // Check for isosceles (two sides equal)
+            if (Math.abs(a - b) / a < tolerance || Math.abs(b - c) / b < tolerance || Math.abs(a - c) / a < tolerance) {
+                return "Isosceles Triangle";
+            }
+            
+            // If none of the above, it's an acute triangle
+            return "Acute Triangle";
+        }
+
+        /**
+         * Calculate bearing between two points (in degrees)
+         * @param {number} lat1 - Latitude of first point in degrees
+         * @param {number} lon1 - Longitude of first point in degrees
+         * @param {number} lat2 - Latitude of second point in degrees
+         * @param {number} lon2 - Longitude of second point in degrees
+         * @returns {number} - Bearing in degrees (0-360)
+         */
+        function calculateBearing(lat1, lon1, lat2, lon2) {
+            // Convert to radians
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const λ1 = lon1 * Math.PI / 180;
+            const λ2 = lon2 * Math.PI / 180;
+            
+            // Calculate bearing
+            const y = Math.sin(λ2 - λ1) * Math.cos(φ2);
+            const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1);
+            const θ = Math.atan2(y, x);
+            
+            // Convert to degrees and normalize to 0-360
+            return (θ * 180 / Math.PI + 360) % 360;
+        }
+
+        /**
+         * Check if four points form a valid transversal configuration
+         * (two parallel lines intersected by a transversal line)
+         * @param {Object} p1 - First point
+         * @param {Object} p2 - Second point
+         * @param {Object} p3 - Third point
+         * @param {Object} p4 - Fourth point
+         * @returns {boolean} - True if valid transversal configuration
+         */
+        function isValidTransversal(p1, p2, p3, p4) {
+            // Calculate bearings between points to determine if we have parallel lines
+            const bearing1 = calculateBearing(p1.lat, p1.long, p2.lat, p2.long);
+            const bearing2 = calculateBearing(p3.lat, p3.long, p4.lat, p4.long);
+            
+            // Calculate potential transversal bearings
+            const transversal1 = calculateBearing(p1.lat, p1.long, p3.lat, p3.long);
+            const transversal2 = calculateBearing(p2.lat, p2.long, p4.lat, p4.long);
+            
+            // Check distances to ensure everything is well proportioned
+            const mainDistance = calculateDistance(p1.lat, p1.long, p2.lat, p2.long);
+            const secondDistance = calculateDistance(p3.lat, p3.long, p4.lat, p4.long);
+            const transDistance1 = calculateDistance(p1.lat, p1.long, p3.lat, p3.long);
+            const transDistance2 = calculateDistance(p2.lat, p2.long, p4.lat, p4.long);
+            
+            // Tolerance for bearing comparison (in degrees)
+            const bearingTolerance = 15;
+            
+            // Distance proportion tolerance
+            const distanceTolerance = 0.3;
+            
+            // Check if the lines are approximately parallel
+            const isParallel = Math.abs((bearing1 - bearing2 + 360) % 360) < bearingTolerance || 
+                               Math.abs((bearing1 - bearing2 + 360) % 360) > (360 - bearingTolerance);
+            
+            // Check if transversal lines have similar bearings (should be within tolerance)
+            const transversalAlign = Math.abs((transversal1 - transversal2 + 360) % 360) < bearingTolerance || 
+                                    Math.abs((transversal1 - transversal2 + 360) % 360) > (360 - bearingTolerance);
+            
+            // Check if transversal bearings are sufficiently different from parallel lines
+            const transversalDifferent = Math.abs((bearing1 - transversal1 + 360) % 360) > bearingTolerance && 
+                                        Math.abs((bearing1 - transversal1 + 360) % 360) < (360 - bearingTolerance);
+            
+            // Check distance proportions
+            const goodProportions = Math.abs(mainDistance - secondDistance) / Math.max(mainDistance, secondDistance) < distanceTolerance &&
+                                   Math.abs(transDistance1 - transDistance2) / Math.max(transDistance1, transDistance2) < distanceTolerance;
+            
+            // Minimum distances
+            const minDistance = 150; // NM
+            const allDistancesGood = mainDistance > minDistance && secondDistance > minDistance && 
+                                   transDistance1 > minDistance && transDistance2 > minDistance;
+            
+            return isParallel && transversalAlign && transversalDifferent && goodProportions && allDistancesGood;
+        }
+
+        // Helper function to find well-separated airports for fallback
+        function findWellSeparatedAirports(airportsL1, airportsL2) {
+            let bestAirports = [];
+            let bestArea = 0;
+            
+            // Combine all airports for fallback
+            const allAirports = [...airportsL1, ...airportsL2];
+            
+            // Try different combinations to find a good triangle
+            const maxIndex = Math.min(allAirports.length, 50);
+            for (let i = 0; i < maxIndex; i++) {
+                if (!allAirports[i]) continue;
+                
+                for (let j = i + 1; j < maxIndex; j++) {
+                    if (!allAirports[j]) continue;
+                    
+                    for (let k = j + 1; k < maxIndex; k++) {
+                        if (!allAirports[k]) continue;
+                        
+                        const a = calculateDistance(allAirports[i].lat, allAirports[i].long, allAirports[j].lat, allAirports[j].long);
+                        const b = calculateDistance(allAirports[j].lat, allAirports[j].long, allAirports[k].lat, allAirports[k].long);
+                        const c = calculateDistance(allAirports[k].lat, allAirports[k].long, allAirports[i].lat, allAirports[i].long);
+                        
+                        // Calculate area using Heron's formula
+                        const s = (a + b + c) / 2;
+                        const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+                        
+                        if (area > bestArea && a > 150 && b > 150 && c > 150) {
+                            bestArea = area;
+                            bestAirports = [allAirports[i], allAirports[j], allAirports[k]];
+                        }
+                    }
+                }
+            }
+            
+            // If we couldn't find good airports, return the first few valid ones
+            if (bestAirports.length < 3) {
+                let validAirports = [];
+                for (let i = 0; i < allAirports.length && validAirports.length < 3; i++) {
+                    if (allAirports[i]) validAirports.push(allAirports[i]);
+                }
+                return validAirports;
+            }
+            
+            return bestAirports;
+        }
+
+        // Helper function to calculate the track angle between two points
+        function getTrackAngle(point1, point2) {
+            // Convert latitude and longitude from degrees to radians
+            const lat1 = point1.lat * Math.PI / 180;
+            const lon1 = point1.long * Math.PI / 180;
+            const lat2 = point2.lat * Math.PI / 180;
+            const lon2 = point2.long * Math.PI / 180;
+            
+            // Calculate track angle
+            const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+            let bearing = Math.atan2(y, x) * 180 / Math.PI;
+            
+            // Convert to positive degrees
+            bearing = (bearing + 360) % 360;
+            
+            return bearing;
+        }
+
+        // Generate a new question with geometric shapes
+        function generateQuestion() {
+            $("#loading").show();
+            $("#showSolution").hide();
+            $("#solutionCard").hide();
+            
+            setTimeout(function() {
+                const selected = selectAirportsForShape();
+                if (!selected) {
+                    alert("Could not generate a valid question. Please try again.");
+                    $("#loading").hide();
+                    return;
+                }
+                
+                const dep = selected.dep;
+                const arr = selected.arr;
+                const eland = selected.eland;
+                const eland2 = selected.eland2;
+                
+                // Flight parameters
+                const cruise_level = [150, 170, 190, 210, 230][Math.floor(Math.random() * 5)];
+                const tas_normal = (240 + Math.random() * 10).toFixed(1);
+                const tas_single_engine = (180 + Math.random() * 20).toFixed(1);
+                
+                // Calculate wind direction based on track
+                const track = getTrackAngle(dep, arr);
+                const wind_dir_normal = Math.floor((track + 180 + (Math.random() - 0.5) * 60) % 360);
+                const wind_speed_normal = Math.floor(40 + Math.random() * 30);
+                const wind_dir_single = Math.floor((wind_dir_normal + (Math.random() - 0.5) * 20) % 360);
+                const wind_speed_single = Math.floor(wind_speed_normal * (0.8 + Math.random() * 0.4));
+                
+                // Build question text with dynamic reference (L1 or L2)
+                const questionText = `Q26 Refer ERC ${selected.reference}. You are planning a flight from ${selected.dep.name} to ${selected.arr.name} direct (draw the track) at FL${cruise_level} with a TAS of ${tas_normal} kt for normal operations and single engine TAS of ${tas_single_engine} kt. WV ${wind_dir_normal}M / ${wind_speed_normal} kt at FL${cruise_level} (normal ops crz), WV ${wind_dir_single}M / ${wind_speed_single} kt for single engine cruise level. Your calculation of the location of the single engine CP (Critical Point) for ${selected.arr.name} and ${selected.dep.name}, on the ${selected.dep.code} - ${selected.arr.code} track, measured as a distance from ${selected.dep.name} is -`;
+    
+                // Store current question data
+                currentQuestion = {
+                    question: questionText,
+                    details: {
+                        departure: dep,
+                        arrival: arr,
+                        land1: eland,
+                        land2: eland2,
+                        cruise_level: cruise_level,
+                        tas_normal: tas_normal,
+                        tas_single_engine: tas_single_engine,
+                        wind_normal: {
+                            direction: wind_dir_normal,
+                            speed: wind_speed_normal
+                        },
+                        wind_single_engine: {
+                            direction: wind_dir_single,
+                            speed: wind_speed_single
+                        },
+                        shapeType: selected.shapeType,
+                        reference: selected.reference
+                    }
+                };
+                
+                // Update the question display
+                $("#questionText").text(questionText);
+                $("#loading").hide();
+            }, 1000);
+        }
+
+        // Calculate critical point using API
+        function calculateCriticalPoint(question) {
+            const loading = $("#loading");
+            loading.show();
+            
+            // Extract coordinates from airports
+            const dep = question.details.departure;
+            const arr = question.details.arrival;
+            const arr1 = question.details.land1;
+            const arr2 = question.details.land2;
+            
+            // Prepare data for API request
+            const apiData = {
+                "P1_lat": dep.lat,
+                "P1_lon": dep.long,
+                "P2_lat": arr.lat,
+                "P2_lon": arr.long,
+                "P3_lat": arr1.lat,
+                "P3_lon": arr1.long,
+                "P4_lat": arr2.lat,
+                "P4_lon": arr2.long,
+                "TAS": parseFloat(question.details.tas_normal),
+                "wind_speed": question.details.wind_normal.speed,
+                "degree": question.details.wind_normal.direction,
+                "include_map": true
+            };
+            
+            // Make API call to the Flask backend
+            return $.ajax({
+                url: 'http://127.0.0.1:5000/api/calculate',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(apiData),
+                dataType: 'json'
+            })
+            .done(function(response) {
+                if (response.status === 'success') {
+                    const results = response.results;
+                    console.log(results)
+                    // Calculate the critical point
+                    const totalDistance = results.distance_to_P1_nm;
+                    const groundSpeedNormal = parseFloat(question.details.tas_normal) - 
+                        (Math.cos((question.details.wind_normal.direction - getTrackAngle(dep, arr)) * Math.PI / 180) * 
+                         question.details.wind_normal.speed);
+                    const groundSpeedSingle = parseFloat(question.details.tas_single_engine) - 
+                        (Math.cos((question.details.wind_single_engine.direction - getTrackAngle(dep, arr)) * Math.PI / 180) * 
+                         question.details.wind_single_engine.speed);
+                    
+                    const criticalPoint = (totalDistance * groundSpeedNormal) / (groundSpeedNormal + groundSpeedSingle);
+                    const windCorrection = results.distance_to_degree;
+                    let distance=response.results.distance_to_P3_nm;
+                    let distance1=response.results.distance_to_degree;
+                    let distance2=response.results.distance_to_P1_nm;
+
+                    document.getElementById('distanceToP3').textContent = `Distance to P3: ${distance} nautical miles`;
+                    document.getElementById('distanceToP4').textContent = `Distance to P3: ${distance1} nautical miles`;
+                    document.getElementById('distanceToP5').textContent = `Distance to P1: ${distance2} nautical miles`;
+                    // Update UI with calculated results
+                    updateSolutionUI(question, {
+                        totalDistance: totalDistance.toFixed(1),
+                        groundSpeedNormal: groundSpeedNormal.toFixed(1),
+                        groundSpeedSingle: groundSpeedSingle.toFixed(1),
+                        criticalPoint: criticalPoint.toFixed(1),
+                        windCorrection: windCorrection.toFixed(1),
+                        mapHtml: results.map_html,
+                        shapeType: question.details.shapeType
+                    });
+                    
+                    // Show solution button
+                    $("#showSolution").show();
+                } else {
+                    alert("Calculation error: " + response.message);
+                }
+                loading.hide();
+            })
+            .fail(function(xhr, status, error) {
+                console.error("API call failed:", error);
+                alert("Failed to calculate critical point. Please try again.");
+                loading.hide();
+            });
+        }
+
+        // Function to update the solution UI with calculated values
+        function updateSolutionUI(question, results) {
+            const dep = question.details.departure;
+            const arr = question.details.arrival;
+            const eland = question.details.land1;
+            const eland2 = question.details.land2;
+            
+            // Update basic flight details
+            $("#departureAirport, #departureAirport2").text(dep.name);
+            $("#departureCode").text(dep.code);
+            $("#arrivalAirport, #arrivalAirport2").text(arr.name);
+            $("#arrivalCode").text(arr.code);
+            $("#cruiseLevel").text(question.details.cruise_level);
+            $("#tasNormal").text(question.details.tas_normal);
+            $("#tasSingleEngine").text(question.details.tas_single_engine);
+            $("#windNormalDir, #windNormalDir2").text(question.details.wind_normal.direction);
+            $("#windNormalSpeed, #windNormalSpeed2").text(question.details.wind_normal.speed);
+            $("#windSingleDir, #windSingleDir2").text(question.details.wind_single_engine.direction);
+            $("#windSingleSpeed, #windSingleSpeed2").text(question.details.wind_single_engine.speed);
+            
+            // Update calculated results
+            $("#totalDistance, #totalDistance2, #totalDistance3").text(results.totalDistance);
+            $("#windCorrection, #windCorrection2").text(results.windCorrection);
+            $("#groundSpeedNormal").text(results.groundSpeedNormal);
+            $("#groundSpeedSingle").text(results.groundSpeedSingle);
+            $("#criticalPoint, #criticalPoint2, #cpDistanceResult").text(results.criticalPoint);
+            
+            // Update map if available
+            if (results.mapHtml) {
+    $("#mapContainer").html(results.mapHtml);
+    
+    // Apply styles with !important to override any API styles
+    $("#mapContainer").attr("style", "height: 400px !important; width: 100% !important; min-height: 400px !important;");
+    
+    // Also try to resize any child elements that might be the actual map
+    $("#mapContainer").find("div, iframe").css({
+        "height": "100%",
+        "width": "100%"
+    });
+} else {
+                // Fallback to mock map with shape information
+                let mapHtml = `<div style="background-color: #e9ecef; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center;">
+                    <div>
+                        <h4>Flight Route Map (${results.shapeType})</h4>
+                        <p>Main route: ${dep.code} to ${arr.code} (${results.totalDistance} NM)</p>
+                        <p>Secondary points: ${eland.code} and ${eland2.code}</p>
+                        <p>Map visualization is not available.</p>
+                    </div>
+                </div>`;
+                $("#mapContainer").html(mapHtml);
+            }
+        }
+
+        // Event handlers
+        $("#generateQuestion").click(generateQuestion);
+        
+        $("#calculateSolution").click(function() {
+            if (!currentQuestion) {
+                alert("Please generate a question first!");
+                return;
+            }
+            calculateCriticalPoint(currentQuestion);
+        });
+        
+        $("#showSolution").click(function() {
+            $("#solutionCard").slideDown();
+            $("#resultAlert").fadeIn();
+            $('html, body').animate({
+                scrollTop: $("#solutionCard").offset().top - 20
+            }, 500);
+        });
+
+        // Initialize with a welcome message
+        $(document).ready(function() {
+            $("#questionText").html("Welcome to the Flight Navigation Problem Solver!<br><br>This tool helps you practice critical point calculations for flight navigation with geometric shapes.<br><br>Click 'Generate New Question' to begin.");
+        });
+    </script>
+</body>
+</html>
