@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,render_template
 import folium
 from geographiclib.geodesic import Geodesic
 import scipy.optimize as optimize
@@ -462,8 +462,4 @@ def api_docs():
 # Base route for Vercel
 @app.route('/', methods=['GET'])
 def home():
-    return jsonify({
-        "status": "success",
-        "message": "Geodesic Calculator API is running",
-        "documentation": "Visit /api/docs for API documentation"
-    })
+    return render_template('index.html')  # This will look for an HTML file in a templates folder
