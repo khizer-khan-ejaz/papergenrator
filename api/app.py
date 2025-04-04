@@ -2,12 +2,12 @@ from flask import Flask, request, jsonify
 import folium
 from geographiclib.geodesic import Geodesic
 import scipy.optimize as optimize
-import io
 from folium.map import Figure
-import base64
 from flask_cors import CORS
+
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
 # Function to convert DMS to Decimal Degrees
 def dms_to_dd(degrees, minutes, seconds, direction):
     try:
@@ -260,7 +260,6 @@ def calculate_geodesic(P1, P2, P3, P4, TAS, wind_speed, degree):
         'distance_to_degree': distance_to_degree,
         'geojson': geojson_data,
         'map_html': map_html,
-       
     }
     
     return results
@@ -455,47 +454,16 @@ def api_docs():
                 "geojson": "GeoJSON object for map rendering",
                 "map_html": "HTML string (only if include_map=true)"
             }
-        },
-        "examples": {
-            "decimal_degrees": {
-                "request": {
-                    "P1_lat": -12.42327778,
-                    "P1_lon": 130.7398056,
-                    "P2_lat": -23.79288889,
-                    "P2_lon": 133.8782222,
-                    "P3_lat": -14.51919444,
-                    "P3_lon": 132.3710000,
-                    "P4_lat": -19.63475000,
-                    "P4_lon": 134.1819444,
-                    "TAS": 220,
-                    "wind_speed": 50,
-                    "degree": 330,
-                   "include_map": False
-
-                }
-            },
-            "dms_format": {
-                "request": {
-                    "P1_lat_deg": "12",
-                    "P1_lat_min": "25",
-                    "P1_lat_sec": "23.8",
-                    "P1_lat_dir": "S",
-                    "P1_lon_deg": "130",
-                    "P1_lon_min": "44",
-                    "P1_lon_sec": "23.3",
-                    "P1_lon_dir": "E",
-                    "(similar pattern for P2, P3, P4)": "...",
-                    "TAS": 220,
-                    "wind_speed": 50,
-                    "degree": 330,
-                    "include_map": False
-
-                }
-            }
         }
     }
     
     return jsonify(docs)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Base route for Vercel
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        "status": "success",
+        "message": "Geodesic Calculator API is running",
+        "documentation": "Visit /api/docs for API documentation"
+    })

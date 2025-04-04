@@ -982,7 +982,7 @@ function calculateAngleBetweenLines(p1, p2, p3, p4) {
             
             // Make API call to the Flask backend
             return $.ajax({
-                url: 'http://127.0.0.1:5000/api/calculate',
+                url: ' https://papergenrator-xxd7.vercel.app/api/calculate',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(apiData),
